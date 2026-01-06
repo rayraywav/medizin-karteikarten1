@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Medizin Klausur 25 26 Karteikarten</title>
+  <style>
+    :root{
+      font-family: system-ui, Arial, sans-serif;
+      color-scheme: dark;
+    }
+    body{
+      margin: 0;
+      background: #0b0c10;
+      color: #e8e8ea;
+    }
+    header{
+      padding: 18px 16px;
+      position: sticky;
+      top: 0;
+      background: rgba(11,12,16,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      z-index: 10;
+    }
+    h1{
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .controls{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    input, select, button{
+      background: #121420;
+      color: #e8e8ea;
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    button{ cursor: pointer; }
+    button:active{ transform: translateY(1px); }
+    main{
+      padding: 18px 16px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .meta{
+      opacity: 0.78;
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.35;
+    }
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .card{
+      perspective: 1200px;
+      height: 210px;
+      outline: none;
+    }
+    .inner{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.55s ease;
+      transform-style: preserve-3d;
+    }
+    .card.flipped .inner{ transform: rotateY(180deg); }
+    .face{
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      backface-visibility: hidden;
+      overflow: auto;
+    }
+    .front{ background: #121420; }
+    .back{ background: #111a14; transform: rotateY(180deg); }
+    .tagrow{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .tag{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      opacity: 0.95;
+    }
+    .q{
+      font-weight: 800;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+    .a{
+      font-size: 14px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+    .hint{
+      opacity: 0.75;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Medizin Klausur 25 26 Karteikarten</h1>
+    <div class="controls">
+      <input id="search" placeholder="Suche nach Begriff oder Thema" />
+      <select id="filter">
+        <option value="alle">Alle Themen</option>
+        <option value="einführung">Einführung</option>
+        <option value="schädigungen">Schädigungen</option>
+        <option value="fachbegriffe">Fachbegriffe</option>
+        <option value="prävention">Prävention</option>
+        <option value="krankheitslehre">Allgemeine Krankheitslehre</option>
+        <option value="gewebe">Gewebelehre und Zelle</option>
+        <option value="genetik">Chromosomen und Zellteilung</option>
+        <option value="down">Down Syndrom und Diagnostik</option>
+      </select>
+      <button id="shuffle">Mischen</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <script>
+    const cards = [
+      // Einführung, krankmachende Faktoren
+      {
+        topic: "einführung",
+        q: "Was ist Gesundheit nach WHO Definition",
+        a: "Zustand völligen körperlichen, seelischen und sozialen Wohlbefindens und nicht allein das Fehlen von Krankheit.",
+        tags: ["Einführung", "WHO"]
+      },
+      {
+        topic: "einführung",
+        q: "Was ist Krankheit",
+        a: "Störungen der normalen Lebensvorgänge durch einen krankmachenden Reiz und die Antwort des Körpers auf diesen Reiz.",
+        tags: ["Einführung"]
+      },
+      {
+        topic: "einführung",
+        q: "Was sind krankmachende Faktoren",
+        a: "Innere Faktoren und äußere Faktoren.",
+        tags: ["Einführung"]
+      },
+      {
+        topic: "einführung",
+        q: "Nenne innere Faktoren für Krankheit",
+        a: "Disposition wie Alter, Geschlecht, Vorerkrankungen.\nVeränderungen des Erbguts.",
+        tags: ["Einführung"]
+      },
+      {
+        topic: "einführung",
+        q: "Nenne äußere Faktoren für Krankheit",
+        a: "Zum Beispiel Verletzungen oder Fehlbelastungen, soziale Spannungen und Konflikte, Ernährung, Strahlung, Kälte und Hitze, elektrischer Strom, chemische Schadstoffe, Lärm, Krankheitserreger, ungesunde Lebensweise, Sauerstoffmangel.",
+        tags: ["Einführung"]
+      },
+
+      // Schädigungen pränatal perinatal postnatal
+      {
+        topic: "schädigungen",
+        q: "Was bedeutet pränatal",
+        a: "Vorgeburtlich.",
+        tags: ["Schädigungen"]
+      },
+      {
+        topic: "schädigungen",
+        q: "Was bedeutet perinatal",
+        a: "Im Zusammenhang mit der Geburt.",
+        tags: ["Schädigungen"]
+      },
+      {
+        topic: "schädigungen",
+        q: "Was bedeutet postnatal",
+        a: "Nach der Geburt.",
+        tags: ["Schädigungen"]
+      },
+      {
+        topic: "schädigungen",
+        q: "Nenne Beispiele für schädigende Einflüsse pränatal",
+        a: "Genetische oder chromosomale Veränderungen.\nEntwicklungsstörungen.\nToxische Ursachen wie Alkohol Medikamente Rauchen.\nInfektionen.\nSeltener Sauerstoffmangel Unfälle Plazentaanlage.",
+        tags: ["Schädigungen"]
+      },
+      {
+        topic: "schädigungen",
+        q: "Nenne Beispiele für schädigende Einflüsse perinatal",
+        a: "Sauerstoffmangel.\nInfektionen.\nHirnblutung.\nFrühgeburt.",
+        tags: ["Schädigungen"]
+      },
+      {
+        topic: "schädigungen",
+        q: "Nenne Beispiele für schädigende Einflüsse postnatal",
+        a: "Kindesalter: Infektionen Unfälle.\nErwachsenenalter: Verkehrsunfälle chronische Krankheiten.\nHohes Alter: chronische und degenerative Erkrankungen, eingeschränktes Hör und Sehvermögen, Demenz.",
+        tags: ["Schädigungen"]
+      },
+
+      // Fachbegriffe
+      {
+        topic: "fachbegriffe",
+        q: "Was ist ein Symptom",
+        a: "Krankheitszeichen.\nKann spezifisch oder unspezifisch sein.\nKann objektiv oder subjektiv sein.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist ein Syndrom",
+        a: "Gruppe von gleichzeitig auftretenden Krankheitszeichen, die zusammengehören.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist Anamnese",
+        a: "Krankenvorgeschichte.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Welche Formen der Anamnese gibt es",
+        a: "Eigenanamnese: Betroffener gibt selbst an.\nFremdanamnese: Angehörige oder Dritte geben an.\nFamilienanamnese: Erkrankungen in der Familie.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was bedeutet Disposition",
+        a: "Krankheitsanfälligkeit, zum Beispiel Alter, Geschlecht, Vorerkrankungen.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist ein Risikofaktor",
+        a: "Erhöht die Wahrscheinlichkeit, eine bestimmte Krankheit zu erwerben, wenn bestimmte körperliche, genetische oder umweltbedingte Umstände vorliegen.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist Diagnose",
+        a: "Erkennen und Benennen einer Krankheit, zum Beispiel durch körperliche Untersuchung, Labordiagnostik, apparative Diagnostik.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Physiologie und Pathologie",
+        a: "Physiologie: Lehre von normalen Lebensvorgängen.\nPathologie: Lehre von Krankheiten.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist Prognose",
+        a: "Vorhersage des Krankheitsverlaufs, zum Beispiel akut oder chronisch.",
+        tags: ["Fachbegriffe"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist Prävention",
+        a: "Vorbeugung durch zielgerichtete Maßnahmen, um Krankheiten oder gesundheitliche Schädigungen zu vermeiden, Risiko zu verringern oder Auftreten zu verzögern.",
+        tags: ["Fachbegriffe", "Prävention"]
+      },
+      {
+        topic: "fachbegriffe",
+        q: "Was ist Therapie",
+        a: "Behandlung.\nMaßnahmen zur Heilung, Besserung oder Linderung.\nZum Beispiel kausal, symptomatisch, konservativ, operativ, palliativ.",
+        tags: ["Fachbegriffe"]
+      },
+
+      // Prävention
+      {
+        topic: "prävention",
+        q: "Gesundheitsförderung und Prävention",
+        a: "Gesundheitsförderung stärkt Schutzfaktoren und Lebensbedingungen.\nPrävention verringert und vermeidet Risikofaktoren, zum Beispiel Vorsorge und Impfungen.",
+        tags: ["Prävention"]
+      },
+      {
+        topic: "prävention",
+        q: "Primäre Prävention",
+        a: "Zeitpunkt: vor Eintreten der Krankheit.\nZiel: Krankheit verhindern, richtet sich an Risikogruppen.\nBeispiele: Aufklärung zu Ernährung Bewegung Stress, Schal bei Kälte, Sonnencreme.",
+        tags: ["Prävention"]
+      },
+      {
+        topic: "prävention",
+        q: "Sekundäre Prävention",
+        a: "Zeitpunkt: im Frühstadium.\nZiel: Früherkennung und rechtzeitig handeln.\nBeispiele: Krebsscreening, bei leichten Halsschmerzen Wärme und Tee, um Verschlimmerung zu verhindern.",
+        tags: ["Prävention"]
+      },
+      {
+        topic: "prävention",
+        q: "Tertiäre Prävention",
+        a: "Zeitpunkt: nach Akutbehandlung oder Manifestation.\nZiel: Verschlimmerung, Folgeschäden oder Rückfälle verhindern, auch Rehabilitation.\nBeispiel: gute Blutzuckereinstellung zur Vermeidung von Spätkomplikationen.",
+        tags: ["Prävention"]
+      },
+      {
+        topic: "prävention",
+        q: "Aktive Impfung und passive Impfung",
+        a: "Aktiv: abgeschwächte oder abgetötete Erreger, Körper bildet Antikörper.\nPassiv: fertige Antikörper, wirkt sofort, hält nur einige Wochen.",
+        tags: ["Prävention"]
+      },
+      {
+        topic: "prävention",
+        q: "Was ist ein Arbeitsunfall",
+        a: "Unfall während der Arbeitszeit oder auf dem unmittelbaren Weg zur oder von der Tätigkeit.",
+        tags: ["Prävention", "Arbeitssicherheit"]
+      },
+      {
+        topic: "prävention",
+        q: "Nenne Gefährdungen am Arbeitsplatz und Gegenmaßnahmen",
+        a: "Arbeitsumgebung: defekte Geräte, fehlende Handläufe. Gegenmaßnahme: sichere Umgebung, Mängel melden.\nSubstanzen und Erreger: Staub, Dämpfe, klinische Abfälle. Gegenmaßnahme: sachgemäßer Umgang, sichere Verwahrung, Entsorgung, Schutzmaßnahmen.\nKörperliche Tätigkeiten: Lasten. Gegenmaßnahme: rückenschonend, Hilfsmittel, Risiken verringern.",
+        tags: ["Prävention", "Arbeitssicherheit"]
+      },
+
+      // Allgemeine Krankheitslehre
+      {
+        topic: "krankheitslehre",
+        q: "Was ist eine Fehlbildung",
+        a: "Vor der Geburt entstandene oder angelegte Fehlgestaltung eines Organs. Kann spontan, vererbt oder während Schwangerschaft erworben sein.",
+        tags: ["Krankheitslehre"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Nenne Beispiele für Fehlbildungen",
+        a: "Herzfehler.\nLippen Kiefer Gaumenspalte.\nHüftdysplasie.\nKlumpfuß.\nFistelbildungen.\nMeningozele oder Myelomeningozele.",
+        tags: ["Krankheitslehre"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Was ist eine Entzündung und was ist das Ziel",
+        a: "Abwehrreaktion auf schädigende Reize wie Erreger, Kälte, Hitze, mechanische Reize.\nZiel: Reiz und Folgen beseitigen oder begrenzen.",
+        tags: ["Krankheitslehre", "Entzündung"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Nenne die fünf klassischen Entzündungszeichen",
+        a: "Rötung.\nWärme.\nSchwellung.\nSchmerz.\nFunktionseinschränkung.",
+        tags: ["Krankheitslehre", "Entzündung"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Nenne weitere allgemeine Entzündungsreaktionen",
+        a: "Abgeschlagenheit und Leistungsschwäche.\nFieber.\nPulsbeschleunigung.",
+        tags: ["Krankheitslehre", "Entzündung"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Was ist ein Tumor im engeren Sinn",
+        a: "Neoplasie, pathologische Zellansammlung durch überschießendes ungehemmtes Wachstum körpereigener Zellen. Zellen oft atypisch.",
+        tags: ["Krankheitslehre", "Tumor"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Nenne mögliche Ursachen von Krebs",
+        a: "Erbliche Disposition.\nHormone.\nStrahlung.\nChemische karzinogene Stoffe.\nViren.\nRisikofaktoren.",
+        tags: ["Krankheitslehre", "Tumor"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Nenne mögliche Symptome einer Krebserkrankung",
+        a: "Nicht heilende Wunden.\nAuffällige Knoten.\nAnhaltende Magen Darm Schluckbeschwerden.\nUngewollter Gewichtsverlust.\nAnhaltende Heiserkeit oder Husten.\nBeschwerden beim Wasserlassen.\nUngewöhnliche Absonderungen.\nFieber Nachtschweiß.\nInfektionsneigung.",
+        tags: ["Krankheitslehre", "Tumor"]
+      },
+      {
+        topic: "krankheitslehre",
+        q: "Gutartig und bösartig zentrale Unterschiede",
+        a: "Gutartig: abgegrenzt, verschieblich, reife normal aufgebaute Zellen, langsames verdrängendes Wachstum, keine Metastasen.\nBösartig: nicht abgegrenzt, oft verwachsen, atypische Zellen, rasches infiltrierendes Wachstum, kann Metastasen bilden.",
+        tags: ["Krankheitslehre", "Tumor"]
+      },
+
+      // Gewebelehre und Zelle
+      {
+        topic: "gewebe",
+        q: "Nenne die vier Grundgewebearten",
+        a: "Epithelgewebe.\nStütz und Bindegewebe.\nMuskelgewebe.\nNervengewebe.",
+        tags: ["Gewebe"]
+      },
+      {
+        topic: "gewebe",
+        q: "Epithelgewebe Funktion und Beispiele",
+        a: "Funktionen: Bedeckung und Schutz, Auskleidung, Transport, Resorption, Sekretion, Ausscheidung.\nBeispiele: äußere Haut, Schleimhäute, Drüsen.",
+        tags: ["Gewebe"]
+      },
+      {
+        topic: "gewebe",
+        q: "Stütz und Bindegewebe Funktion und Beispiele",
+        a: "Funktionen: Unterstützung, Verbindung, Statik, Speicherung, Transport.\nBeispiele: Knorpel, Knochen, Sehnen, Bänder, Fett, Blut.",
+        tags: ["Gewebe"]
+      },
+      {
+        topic: "gewebe",
+        q: "Muskelgewebe Funktion und Beispiele",
+        a: "Funktionen: Bewegung und Wärmebildung.\nBeispiele: Skelettmuskeln, Herzmuskulatur, Gefäßwände, Hohlorgane.",
+        tags: ["Gewebe"]
+      },
+      {
+        topic: "gewebe",
+        q: "Nervengewebe Funktion und Beispiele",
+        a: "Funktionen: Steuerung, Erfassung, Verarbeitung, Aussendung von Informationen.\nBeispiele: Gehirn, Rückenmark, periphere Nerven, Sinnesorgane.",
+        tags: ["Gewebe"]
+      },
+      {
+        topic: "gewebe",
+        q: "Nenne Kennzeichen des Lebens",
+        a: "Stoffwechsel.\nReizaufnahme.\nBewegung.\nWachstum.\nFortpflanzung.",
+        tags: ["Zelle"]
+      },
+      {
+        topic: "gewebe",
+        q: "Zellorganellen Beispiele und Aufgabe",
+        a: "Zellkern: Träger der Erbinformation.\nMitochondrien: Energiegewinnung.\nEndoplasmatisches Retikulum: Transportsystem und Unterteilung.\nRibosomen: Eiweißherstellung.\nGolgi Apparat: Sekretbildung.",
+        tags: ["Zelle"]
+      },
+
+      // Chromosomen und Zellteilung
+      {
+        topic: "genetik",
+        q: "Wie viele Chromosomen hat der Mensch",
+        a: "46 Chromosomen in Körperzellen. Das ist ein doppelter Chromosomensatz.",
+        tags: ["Chromosomen"]
+      },
+      {
+        topic: "genetik",
+        q: "Was sind Autosomen und Gonosomen",
+        a: "44 Autosomen sind 22 Paare.\n2 Gonosomen bestimmen das Geschlecht.\nFrau XX.\nMann XY.",
+        tags: ["Chromosomen"]
+      },
+      {
+        topic: "genetik",
+        q: "Warum kann man Chromosomen paarweise ordnen",
+        a: "Weil jeweils ein Chromosom vom Vater und eins von der Mutter stammt, dadurch entstehen Paare.",
+        tags: ["Chromosomen"]
+      },
+
+      // Mitose klausurgenau
+      {
+        topic: "genetik",
+        q: "Mitose was passiert mit dem Chromosomensatz",
+        a: "Vor der Mitose: 46 Chromosomen.\nNach der Mitose: 46 Chromosomen.\nEs entstehen zwei genetisch identische Tochterzellen.",
+        tags: ["Mitose"]
+      },
+      {
+        topic: "genetik",
+        q: "Mitose Zweck",
+        a: "Wachstum.\nErneuerung und Ersatz abgestorbener Zellen.\nWundheilung.",
+        tags: ["Mitose"]
+      },
+
+      // Meiose klausurgenau
+      {
+        topic: "genetik",
+        q: "Meiose was passiert mit dem Chromosomensatz",
+        a: "Reduktion von 46 auf 23 Chromosomen.",
+        tags: ["Meiose"]
+      },
+      {
+        topic: "genetik",
+        q: "Meiose Ergebnis beim Mann",
+        a: "Aus einer unreifen Samenzelle mit 46 Chromosomen entstehen vier Samenzellen mit jeweils 23 Chromosomen.",
+        tags: ["Meiose"]
+      },
+      {
+        topic: "genetik",
+        q: "Meiose Ergebnis bei der Frau",
+        a: "Aus einer unreifen Eizelle mit 46 Chromosomen entsteht eine befruchtungsfähige Eizelle mit 23 Chromosomen.",
+        tags: ["Meiose"]
+      },
+      {
+        topic: "genetik",
+        q: "Meiose warum wichtig",
+        a: "Damit nach der Befruchtung wieder ein konstanter Chromosomensatz von 46 entsteht.\n23 vom Vater und 23 von der Mutter.",
+        tags: ["Meiose"]
+      },
+
+      // Down Syndrom und Diagnostik
+      {
+        topic: "down",
+        q: "Was ist Trisomie 21 kurz erklärt",
+        a: "Durch fehlerhafte Trennung entsteht eine Keimzelle mit zwei Chromosomen 21. Nach Befruchtung entsteht eine Zelle mit drei Chromosomen 21, insgesamt 47 statt 46 Chromosomen.",
+        tags: ["Down Syndrom"]
+      },
+      {
+        topic: "down",
+        q: "Down Syndrom Merkmale und Symptome",
+        a: "Geistige Entwicklungsverzögerung.\nVerminderte Muskelspannung.\nCharakteristische Gesichtsmerkmale.\nHäufig angeborene Herzfehler.\nKleinwuchs.\nErhöhte Infektanfälligkeit.",
+        tags: ["Down Syndrom"]
+      },
+      {
+        topic: "down",
+        q: "Was ist pränatale Diagnostik",
+        a: "Untersuchungen zur Feststellung von Entwicklungsstörungen und genetischen Auffälligkeiten vor der Geburt.",
+        tags: ["Pränatale Diagnostik"]
+      },
+      {
+        topic: "down",
+        q: "Methoden der pränatalen Diagnostik nennen",
+        a: "Ultraschall.\nBlutuntersuchungen der Mutter.\nAmniozentese.\nChorionzottenbiopsie.",
+        tags: ["Pränatale Diagnostik"]
+      },
+      {
+        topic: "down",
+        q: "Ultraschall pränatale Diagnostik",
+        a: "Kontrolle von Wachstum, Organen und Fehlbildungen.\nNicht invasiv.",
+        tags: ["Pränatale Diagnostik"]
+      },
+      {
+        topic: "down",
+        q: "Blutuntersuchungen der Mutter pränatale Diagnostik",
+        a: "Hinweise auf genetische Auffälligkeiten.\nRisikoabschätzung.",
+        tags: ["Pränatale Diagnostik"]
+      },
+      {
+        topic: "down",
+        q: "Amniozentese",
+        a: "Untersuchung des Fruchtwassers zur Chromosomenanalyse des Kindes.\nInvasiv.\nMit Fehlgeburtsrisiko.",
+        tags: ["Pränatale Diagnostik"]
+      },
+      {
+        topic: "down",
+        q: "Chorionzottenbiopsie",
+        a: "Entnahme von Plazentagewebe zur frühen Chromosomenanalyse.\nInvasiv.",
+        tags: ["Pränatale Diagnostik"]
+      }
+    ];
+
+    const grid = document.getElementById("grid");
+    const search = document.getElementById("search");
+    const filter = document.getElementById("filter");
+    const meta = document.getElementById("meta");
+
+    function render(list){
+      grid.innerHTML = "";
+      list.forEach((c) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.tabIndex = 0;
+
+        const inner = document.createElement("div");
+        inner.className = "inner";
+
+        const front = document.createElement("div");
+        front.className = "face front";
+        front.innerHTML = `
+          <div class="tagrow">${c.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+          <div class="q">${c.q}</div>
+          <div class="hint">Klick zum Umdrehen</div>
+        `;
+
+        const back = document.createElement("div");
+        back.className = "face back";
+        back.innerHTML = `
+          <div class="tagrow">${c.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+          <div class="a">${c.a}</div>
+          <div class="hint">Klick zum Zurückdrehen</div>
+        `;
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        card.appendChild(inner);
+
+        card.addEventListener("click", () => card.classList.toggle("flipped"));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            card.classList.toggle("flipped");
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      meta.textContent = `${list.length} Karten angezeigt. Tipp: Suche oder filtere, dann lernen.`;
+    }
+
+    function apply(){
+      const q = search.value.trim().toLowerCase();
+      const f = filter.value;
+
+      const filtered = cards.filter(c => {
+        const matchesTopic = (f === "alle") ? true : (c.topic === f);
+        const blob = (c.q + " " + c.a + " " + c.tags.join(" ")).toLowerCase();
+        const matchesSearch = q ? blob.includes(q) : true;
+        return matchesTopic && matchesSearch;
+      });
+
+      render(filtered);
+    }
+
+    document.getElementById("shuffle").addEventListener("click", () => {
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      apply();
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      search.value = "";
+      filter.value = "alle";
+      apply();
+    });
+
+    search.addEventListener("input", apply);
+    filter.addEventListener("change", apply);
+
+    apply();
+  </script>
+</body>
+</html>
